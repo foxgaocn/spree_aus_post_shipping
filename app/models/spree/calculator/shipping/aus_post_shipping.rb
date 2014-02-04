@@ -3,6 +3,8 @@ require 'rest-client'
 module Spree
   module Calculator::Shipping
     class AusPostShipping < ShippingCalculator
+
+      @shipping_fee
     
       def self.service_name
         "Australia Post Shipping Calculator"
@@ -15,8 +17,20 @@ module Spree
       def activate
         Calculator::AusPostShipping.register
       end
+
+      def available?(package)
+        @shipping_fee = calculate_shipping(package)
+        !@shipping_fee.nil?
+      end
     
       def compute(package)
+         if @shipping_fee.nil?
+           @shipping_fee = calculate_shipping(package)
+         end
+         @shipping_fee
+      end
+
+      def calculate_shipping(package)
 
         weight = Spree::AusPostShipping::Config[ :default_weight ]
         # estimate the total order's cubic weight, simple algorithm here assume a minimum weight
@@ -52,7 +66,12 @@ module Spree
         else 
           shipment_cost = nil
         end
-        BigDecimal.new(shipment_cost.to_s).round(2, BigDecimal::ROUND_HALF_UP)
+        if shipment_cost == 0
+          shipment_cost = nil
+        else 
+          BigDecimal.new( shipment_cost.to_s ).round(2)
+        end
+        shipment_cost
       end
 
       private
