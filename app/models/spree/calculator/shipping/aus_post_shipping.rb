@@ -100,7 +100,7 @@ module Spree
         api_name = '/api/postage/parcel/domestic/service.xml'
         origin_postcode = settings[ :origin_postcode ]
         dest_postcode = settings[ :dest_postcode ]
-        weight = settings[ :weight ]/1000
+        weight = settings[ :weight ]
         height = Spree::AusPostShipping::Config[ :default_height ]
         width = Spree::AusPostShipping::Config[ :default_width ]
         length = Spree::AusPostShipping::Config[ :default_length ]
