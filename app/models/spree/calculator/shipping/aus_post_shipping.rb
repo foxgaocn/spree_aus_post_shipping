@@ -19,7 +19,7 @@ module Spree
       end
 
       def available?(package)
-        if !package.order.ship_adddress.nil? && !package.order.ship_address.zipcode.nil?
+        if !package.order.ship_address.nil? && !package.order.ship_address.zipcode.nil?
           @shipping_fee = calculate_shipping(package)
           !@shipping_fee.nil?
         else
@@ -27,8 +27,8 @@ module Spree
         end
       end
     
-      def compute(package)
-        if !package.order.ship_adddress.nil? && !package.order.ship_address.zipcode.nil?
+      def compute_package(package)
+        if !package.order.ship_address.nil? && !package.order.ship_address.zipcode.nil?
           if @shipping_fee.nil?
             @shipping_fee = calculate_shipping(package)
            end
@@ -39,7 +39,6 @@ module Spree
       end
 
       def calculate_shipping(package)
-
         weight = Spree::AusPostShipping::Config[ :default_weight ]
         # estimate the total order's cubic weight, simple algorithm here assume a minimum weight
         # unless we find a item that is heavier
@@ -51,7 +50,8 @@ module Spree
             end
           end
         end
-      
+
+        
         services = retrieve_rates( :origin_postcode => Spree::AusPostShipping::Config[ :origin_postcode ],
                                 :dest_postcode => package.order.ship_address.zipcode,
                                 :weight => weight )
@@ -100,7 +100,7 @@ module Spree
         api_name = '/api/postage/parcel/domestic/service.xml'
         origin_postcode = settings[ :origin_postcode ]
         dest_postcode = settings[ :dest_postcode ]
-        weight = settings[ :weight ]
+        weight = settings[ :weight ]/1000
         height = Spree::AusPostShipping::Config[ :default_height ]
         width = Spree::AusPostShipping::Config[ :default_width ]
         length = Spree::AusPostShipping::Config[ :default_length ]
@@ -109,7 +109,7 @@ module Spree
         services = []      
         auspost_url = "https://#{host_name}#{api_name}?from_postcode=#{origin_postcode}&to_postcode=#{dest_postcode}&length=#{length}&width=#{width}&height=#{height}&weight=#{weight}"
         begin
-          result = ::RestClient.get auspost_url, { :auth_key => api_key }
+          result = ::RestClient.get auspost_url, { "auth-key" => api_key }
           doc = Nokogiri::XML( result )
           # find services in the response document
           service_nodes = doc.xpath('/services/service')
@@ -121,6 +121,7 @@ module Spree
             services << service
           end
         rescue Exception
+          puts "~~~~~Exception call to post url"
           #raise StandardError.new("Couldn't obtain service charges for AusPost Courier")
           return []
         end
