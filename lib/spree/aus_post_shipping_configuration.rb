@@ -7,6 +7,7 @@ class Spree::AusPostShippingConfiguration < Spree::Preferences::Configuration
   preference :default_length, :integer, :default => 30
   preference :service_types, :string, :default => ['aus_parcel_regular']
   preference :api_key, :string
+  preference :get_cheapest, :boolean, :default => false
   
 
 

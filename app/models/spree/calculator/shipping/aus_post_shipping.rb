@@ -57,6 +57,7 @@ module Spree
                                 :weight => weight )
 
         allowed_service_types = Spree::AusPostShipping::Config[ :service_types ]
+        get_cheapest = Spree::AusPostShipping::Config[ :get_cheapest ]
 
         if services 
           shipment_cost = 0
@@ -65,7 +66,7 @@ module Spree
             service_name = service[ :name ]
             service_price = service[ :price ]
 
-            if allowed_service_types.include? service_name
+            if allowed_service_types.include? service_name || get_cheapest
               if service_price > shipment_cost
                 shipment_cost = service_price
               end
