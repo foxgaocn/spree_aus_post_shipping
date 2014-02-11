@@ -39,15 +39,13 @@ module Spree
       end
 
       def calculate_shipping(package)
-        weight = Spree::AusPostShipping::Config[ :default_weight ]
+        weight = 0
         # estimate the total order's cubic weight, simple algorithm here assume a minimum weight
         # unless we find a item that is heavier
         # this is an estimate only based on finding the heaviest item - keep the customers buying
         package.flattened.each do | line_item | 
           if not line_item.variant.weight.nil? 
-            if line_item.variant.weight > weight
-              weight = line_item.variant.weight
-            end
+             weight += line_item.variant.weight
           end
         end
 
@@ -59,26 +57,17 @@ module Spree
         allowed_service_types = Spree::AusPostShipping::Config[ :service_types ]
         get_cheapest = Spree::AusPostShipping::Config[ :get_cheapest ]
 
+        shipment_cost = nil
+        
         if services 
-          shipment_cost = 0
           # select a service that matches our available service types and has the lowest cost
           services.each do | service | 
             service_name = service[ :name ]
             service_price = service[ :price ]
-
-            if allowed_service_types.include? service_name || get_cheapest
-              if service_price > shipment_cost
-                shipment_cost = service_price
-              end
+            if ((allowed_service_types.include? service_name) || get_cheapest)
+              shipment_cost = service_price if (shipment_cost == nil || (service_price < shipment_cost))
             end
           end
-        else 
-          shipment_cost = nil
-        end
-        if shipment_cost == 0
-          shipment_cost = nil
-        else 
-          BigDecimal.new( shipment_cost.to_s ).round(2)
         end
         shipment_cost
       end
